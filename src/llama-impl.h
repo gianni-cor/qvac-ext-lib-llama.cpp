@@ -28,12 +28,12 @@ void llama_log_internal        (ggml_log_level level, const char * format, ...);
 void llama_log_callback_default(ggml_log_level level, const char * text, void * user_data);
 
 #ifdef __ANDROID__
-#define LLAMA_LOG(...)         __android_log_print(ANDROID_LOG_ERROR, "bare", __VA_ARGS__)  // llama_log_internal(GGML_LOG_LEVEL_NONE , __VA_ARGS__)
-#define LLAMA_LOG_INFO(...)    __android_log_print(ANDROID_LOG_ERROR, "bare", __VA_ARGS__)  // llama_log_internal(GGML_LOG_LEVEL_INFO , __VA_ARGS__)
-#define LLAMA_LOG_WARN(...)    __android_log_print(ANDROID_LOG_ERROR, "bare", __VA_ARGS__)  // llama_log_internal(GGML_LOG_LEVEL_WARN , __VA_ARGS__)
+#define LLAMA_LOG(...)         __android_log_print(ANDROID_LOG_INFO, "bare", __VA_ARGS__)  // llama_log_internal(GGML_LOG_LEVEL_NONE , __VA_ARGS__)
+#define LLAMA_LOG_INFO(...)    __android_log_print(ANDROID_LOG_INFO, "bare", __VA_ARGS__)  // llama_log_internal(GGML_LOG_LEVEL_INFO , __VA_ARGS__)
+#define LLAMA_LOG_WARN(...)    __android_log_print(ANDROID_LOG_WARN, "bare", __VA_ARGS__)  // llama_log_internal(GGML_LOG_LEVEL_WARN , __VA_ARGS__)
 #define LLAMA_LOG_ERROR(...)   __android_log_print(ANDROID_LOG_ERROR, "bare", __VA_ARGS__)  // llama_log_internal(GGML_LOG_LEVEL_ERROR, __VA_ARGS__)
-#define LLAMA_LOG_DEBUG(...)   __android_log_print(ANDROID_LOG_ERROR, "bare", __VA_ARGS__)  // llama_log_internal(GGML_LOG_LEVEL_DEBUG, __VA_ARGS__)
-#define LLAMA_LOG_CONT(...)    __android_log_print(ANDROID_LOG_ERROR, "bare", __VA_ARGS__)  // llama_log_internal(GGML_LOG_LEVEL_CONT , __VA_ARGS__)
+#define LLAMA_LOG_DEBUG(...)   __android_log_print(ANDROID_LOG_DEBUG, "bare", __VA_ARGS__)  // llama_log_internal(GGML_LOG_LEVEL_DEBUG, __VA_ARGS__)
+#define LLAMA_LOG_CONT(...)    __android_log_print(ANDROID_LOG_INFO, "bare", __VA_ARGS__)  // llama_log_internal(GGML_LOG_LEVEL_CONT , __VA_ARGS__)
 #else
 #define LLAMA_LOG(...)       llama_log_internal(GGML_LOG_LEVEL_NONE , __VA_ARGS__)
 #define LLAMA_LOG_INFO(...)  llama_log_internal(GGML_LOG_LEVEL_INFO , __VA_ARGS__)
