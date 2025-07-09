@@ -104,20 +104,20 @@ void common_log_set_timestamps(struct common_log * log,       bool   timestamps)
 
 #ifdef __ANDROID__
 
-#define LOG(...)             LOG_TMPL(ANDROID_LOG_ERROR, 0,         __VA_ARGS__)
-#define LOGV(verbosity, ...) LOG_TMPL(ANDROID_LOG_ERROR, 0, __VA_ARGS__)
+#define LOG(...)             LOG_TMPL(ANDROID_LOG_INFO, 0,         __VA_ARGS__)
+#define LOGV(verbosity, ...) LOG_TMPL(ANDROID_LOG_INFO, 0, __VA_ARGS__)
 
-#define LOG_INF(...) LOG_TMPL(ANDROID_LOG_ERROR,  0,                 __VA_ARGS__)
-#define LOG_WRN(...) LOG_TMPL(ANDROID_LOG_ERROR,  0,                 __VA_ARGS__)
+#define LOG_INF(...) LOG_TMPL(ANDROID_LOG_INFO,  0,                 __VA_ARGS__)
+#define LOG_WRN(...) LOG_TMPL(ANDROID_LOG_WARN,  0,                 __VA_ARGS__)
 #define LOG_ERR(...) LOG_TMPL(ANDROID_LOG_ERROR, 0,                 __VA_ARGS__)
-#define LOG_DBG(...) LOG_TMPL(ANDROID_LOG_ERROR, 0,                  __VA_ARGS__)
-#define LOG_CNT(...) LOG_TMPL(ANDROID_LOG_ERROR,  0,                 __VA_ARGS__)
+#define LOG_DBG(...) LOG_TMPL(ANDROID_LOG_DEBUG, 0,                  __VA_ARGS__)
+#define LOG_CNT(...) LOG_TMPL(ANDROID_LOG_INFO,  0,                 __VA_ARGS__)
 
-#define LOG_INFV(verbosity, ...) LOG_TMPL(ANDROID_LOG_ERROR,  0, __VA_ARGS__)
-#define LOG_WRNV(verbosity, ...) LOG_TMPL(ANDROID_LOG_ERROR,  0, __VA_ARGS__)
+#define LOG_INFV(verbosity, ...) LOG_TMPL(ANDROID_LOG_INFO,  0, __VA_ARGS__)
+#define LOG_WRNV(verbosity, ...) LOG_TMPL(ANDROID_LOG_WARN,  0, __VA_ARGS__)
 #define LOG_ERRV(verbosity, ...) LOG_TMPL(ANDROID_LOG_ERROR, 0, __VA_ARGS__)
-#define LOG_DBGV(verbosity, ...) LOG_TMPL(ANDROID_LOG_ERROR, 0, __VA_ARGS__)
-#define LOG_CNTV(verbosity, ...) LOG_TMPL(ANDROID_LOG_ERROR,  0, __VA_ARGS__)
+#define LOG_DBGV(verbosity, ...) LOG_TMPL(ANDROID_LOG_DEBUG, 0, __VA_ARGS__)
+#define LOG_CNTV(verbosity, ...) LOG_TMPL(ANDROID_LOG_INFO,  0, __VA_ARGS__)
 
 #else
 #define LOG(...)             LOG_TMPL(GGML_LOG_LEVEL_NONE, 0,         __VA_ARGS__)

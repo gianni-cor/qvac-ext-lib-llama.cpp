@@ -87,12 +87,12 @@ GGML_API void ggml_log_callback_default(enum ggml_log_level level, const char * 
 
 
 #ifdef __ANDROID__
-#define GGML_LOG(...)       __android_log_print(ANDROID_LOG_ERROR, "bare", __VA_ARGS__)
-#define GGML_LOG_INFO(...)  __android_log_print(ANDROID_LOG_ERROR, "bare", __VA_ARGS__)
-#define GGML_LOG_WARN(...)  __android_log_print(ANDROID_LOG_ERROR, "bare", __VA_ARGS__)
+#define GGML_LOG(...)       __android_log_print(ANDROID_LOG_INFO, "bare", __VA_ARGS__)
+#define GGML_LOG_INFO(...)  __android_log_print(ANDROID_LOG_INFO, "bare", __VA_ARGS__)
+#define GGML_LOG_WARN(...)  __android_log_print(ANDROID_LOG_WARN, "bare", __VA_ARGS__)
 #define GGML_LOG_ERROR(...) __android_log_print(ANDROID_LOG_ERROR, "bare", __VA_ARGS__)
-#define GGML_LOG_DEBUG(...) __android_log_print(ANDROID_LOG_ERROR, "bare", __VA_ARGS__)
-#define GGML_LOG_CONT(...)  __android_log_print(ANDROID_LOG_ERROR, "bare", __VA_ARGS__)
+#define GGML_LOG_DEBUG(...) __android_log_print(ANDROID_LOG_DEBUG, "bare", __VA_ARGS__)
+#define GGML_LOG_CONT(...)  __android_log_print(ANDROID_LOG_INFO, "bare", __VA_ARGS__)
 
 #else
 
