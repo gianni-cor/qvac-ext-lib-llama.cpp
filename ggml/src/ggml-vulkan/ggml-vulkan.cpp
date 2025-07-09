@@ -7,6 +7,11 @@
 
 #include <vulkan/vulkan.hpp>
 
+#ifdef __ANDROID__
+#include <android/log.h>
+#endif
+
+
 #include <algorithm>
 #include <cmath>
 #include <iomanip>
@@ -96,6 +101,17 @@ static bool is_pow2(uint32_t x) { return x > 1 && (x & (x-1)) == 0; }
 
 #ifdef GGML_VULKAN_DEBUG
 #define VK_LOG_DEBUG(msg) std::cerr << msg << std::endl
+#define VK_ERR_DEBUG(msg)                               \
+    {                                                   \
+        std::stringstream ss;                               \
+        std::streambuf* old_cerr_buf = std::cerr.rdbuf();   \
+        std::cerr.rdbuf(ss.rdbuf());                        \
+        std::cerr << msg << std::endl;                       \
+        std::cerr.rdbuf(old_cerr_buf);                      \
+        std::string captured_errors = ss.str();             \
+        __android_log_print(ANDROID_LOG_ERROR, "bare", "ERROR VK: %s \n", captured_errors.c_str()); \
+    }
+
 #else
 #define VK_LOG_DEBUG(msg) ((void) 0)
 #endif // GGML_VULKAN_DEBUG
@@ -1246,8 +1262,8 @@ static void ggml_vk_create_pipeline_func(vk_device& device, vk_pipeline& pipelin
     try {
         pipeline->pipeline = device->device.createComputePipeline(VK_NULL_HANDLE, compute_pipeline_create_info).value;
     } catch (const vk::SystemError& e) {
-        std::cerr << "ggml_vulkan: Compute pipeline creation failed for " << pipeline->name << std::endl;
-        std::cerr << "ggml_vulkan: " << e.what() << std::endl;
+        VK_ERR_DEBUG(   "ggml_vulkan: Compute pipeline creation failed for " << pipeline->name << std::endl);
+        VK_ERR_DEBUG(   "ggml_vulkan: " << e.what() << std::endl);
         throw e;
     }
     pipeline->compiled = true;
@@ -1465,10 +1481,10 @@ static uint32_t ggml_vk_find_queue_family_index(std::vector<vk::QueueFamilyPrope
         return compute_index;
     }
 
-    std::cerr << "ggml_vulkan: No suitable queue family index found." << std::endl;
+    VK_ERR_DEBUG(   "ggml_vulkan: No suitable queue family index found." << std::endl);
 
     for(auto &q_family : queue_family_props) {
-        std::cerr << "Queue number: "  + std::to_string(q_family.queueCount) << " flags: " + to_string(q_family.queueFlags) << std::endl;
+        VK_ERR_DEBUG(   "Queue number: "  + std::to_string(q_family.queueCount) << " flags: " + to_string(q_family.queueFlags) << std::endl);
     }
     abort();
 }
@@ -1652,8 +1668,8 @@ static vk_buffer ggml_vk_create_buffer_check(vk_device& device, size_t size, vk:
     try {
         return ggml_vk_create_buffer(device, size, req_flags, fallback_flags);
     } catch (const vk::SystemError& e) {
-        std::cerr << "ggml_vulkan: Memory allocation of size " << size << " failed." << std::endl;
-        std::cerr << "ggml_vulkan: " << e.what() << std::endl;
+        VK_ERR_DEBUG(   "ggml_vulkan: Memory allocation of size " << size << " failed." << std::endl);
+        VK_ERR_DEBUG(   "ggml_vulkan: " << e.what() << std::endl);
         throw e;
     }
 }
@@ -1671,8 +1687,8 @@ static vk_buffer ggml_vk_create_buffer_device(vk_device& device, size_t size) {
             buf = ggml_vk_create_buffer(device, size, vk::MemoryPropertyFlagBits::eDeviceLocal | vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent, vk::MemoryPropertyFlagBits::eDeviceLocal);
         }
     } catch (const vk::SystemError& e) {
-        std::cerr << "ggml_vulkan: Device memory allocation of size " << size << " failed." << std::endl;
-        std::cerr << "ggml_vulkan: " << e.what() << std::endl;
+        VK_ERR_DEBUG(   "ggml_vulkan: Device memory allocation of size " << size << " failed." << std::endl);
+        VK_ERR_DEBUG(   "ggml_vulkan: " << e.what() << std::endl);
         throw e;
     }
 
@@ -2043,7 +2059,7 @@ static void ggml_vk_load_shaders(vk_device& device) {
             // Check mmq warptiles as the largest configuration
             // Throw an error if not enough for any matrix multiplication is available
             if (!ggml_vk_matmul_shmem_support(device, s_warptile_mmq, false, t)) {
-                std::cerr << "ggml_vulkan: Error: Shared memory size too small for matrix multiplication." << std::endl;
+                VK_ERR_DEBUG(   "ggml_vulkan: Error: Shared memory size too small for matrix multiplication." << std::endl);
                 throw std::runtime_error("Shared memory size too small for matrix multiplication.");
             } else if (!ggml_vk_matmul_shmem_support(device, m_warptile_mmq, false, t)) {
                 device->mul_mat_m[i] = false;
@@ -2992,7 +3008,7 @@ static vk_device ggml_vk_get_device(size_t idx) {
         std::vector<vk::PhysicalDevice> physical_devices = vk_instance.instance.enumeratePhysicalDevices();
 
         if (dev_num >= physical_devices.size()) {
-            std::cerr << "ggml_vulkan: Device with index " << dev_num << " does not exist." << std::endl;
+            VK_ERR_DEBUG(   "ggml_vulkan: Device with index " << dev_num << " does not exist." << std::endl);
             throw std::runtime_error("Device not found");
         }
 
@@ -3375,7 +3391,7 @@ static vk_device ggml_vk_get_device(size_t idx) {
         }
 
         if (!vk11_features.storageBuffer16BitAccess) {
-            std::cerr << "ggml_vulkan: device " << GGML_VK_NAME << idx << " does not support 16-bit storage." << std::endl;
+            VK_ERR_DEBUG(   "ggml_vulkan: device " << GGML_VK_NAME << idx << " does not support 16-bit storage." << std::endl);
             throw std::runtime_error("Unsupported device");
         }
 
@@ -3603,7 +3619,7 @@ static void ggml_vk_print_gpu_info(size_t idx) {
     std::vector<vk::PhysicalDevice> devices = vk_instance.instance.enumeratePhysicalDevices();
 
     if (dev_num >= devices.size()) {
-        std::cerr << "ggml_vulkan: Device with index " << dev_num << " does not exist." << std::endl;
+        VK_ERR_DEBUG(   "ggml_vulkan: Device with index " << dev_num << " does not exist." << std::endl);
         throw std::runtime_error("Device not found");
     }
 
@@ -3745,7 +3761,7 @@ static void ggml_vk_instance_init() {
     uint32_t api_version = vk::enumerateInstanceVersion();
 
     if (api_version < VK_API_VERSION_1_2) {
-        std::cerr << "ggml_vulkan: Error: Vulkan 1.2 required." << std::endl;
+        VK_ERR_DEBUG(   "ggml_vulkan: Error: Vulkan 1.2 required." << std::endl);
         GGML_ABORT("fatal error");
     }
 
@@ -3822,7 +3838,7 @@ static void ggml_vk_instance_init() {
         size_t tmp;
         while (ss >> tmp) {
             if(tmp >= num_available_devices) {
-                std::cerr << "ggml_vulkan: Invalid device index " << tmp << " in GGML_VK_VISIBLE_DEVICES." << std::endl;
+                VK_ERR_DEBUG(   "ggml_vulkan: Invalid device index " << tmp << " in GGML_VK_VISIBLE_DEVICES." << std::endl);
                 throw std::runtime_error("Invalid Vulkan device index");
             }
             vk_instance.device_indices.push_back(tmp);
@@ -4244,7 +4260,7 @@ static void ggml_vk_pool_free(ggml_backend_vk_context * ctx, vk_buffer& buffer) 
             return;
         }
     }
-    std::cerr << "ggml_vulkan: WARNING: vk buffer pool full, increase MAX_VK_BUFFERS" << std::endl;
+    VK_ERR_DEBUG(   "ggml_vulkan: WARNING: vk buffer pool full, increase MAX_VK_BUFFERS" << std::endl);
     ggml_vk_destroy_buffer(buffer);
 }
 
@@ -4448,7 +4464,7 @@ static void ggml_vk_buffer_write_nc_async(ggml_backend_vk_context * ctx, vk_cont
     GGML_ASSERT(!ggml_is_contiguous(tensor));
     // Buffer is already mapped
     if(dst->memory_property_flags & vk::MemoryPropertyFlagBits::eHostVisible) {
-        std::cerr << "ggml_vulkan: buffer_write_nc_async dst buffer is host_visible. Use synchronous write." << std::endl;
+        VK_ERR_DEBUG(   "ggml_vulkan: buffer_write_nc_async dst buffer is host_visible. Use synchronous write." << std::endl);
         GGML_ABORT("fatal error");
     }
     // Check if src is pinned memory
@@ -4544,7 +4560,7 @@ static void ggml_vk_buffer_write_2d_async(vk_context subctx, vk_buffer& dst, siz
     VK_LOG_DEBUG("ggml_vk_buffer_write_2d_async(" << width << ", " << height << ")");
     // Buffer is already mapped
     if(dst->memory_property_flags & vk::MemoryPropertyFlagBits::eHostVisible) {
-        std::cerr << "ggml_vulkan: buffer_write_async dst buffer is host_visible. Use synchronous write." << std::endl;
+        VK_ERR_DEBUG(   "ggml_vulkan: buffer_write_async dst buffer is host_visible. Use synchronous write." << std::endl);
         GGML_ABORT("fatal error");
     }
     // Check if src is pinned memory
@@ -5014,7 +5030,7 @@ static vk_pipeline ggml_vk_get_cpy_pipeline(ggml_backend_vk_context * ctx, const
         }
     }
 
-    std::cerr << "Missing CPY op for types: " << ggml_type_name(src->type) << " " << ggml_type_name(to) << std::endl;
+    VK_ERR_DEBUG(   "Missing CPY op for types: " << ggml_type_name(src->type) << " " << ggml_type_name(to) << std::endl);
     GGML_ABORT("fatal error");
 }
 
@@ -5052,7 +5068,7 @@ static vk_pipeline ggml_vk_get_quantize_pipeline(ggml_backend_vk_context * ctx, 
         case GGML_TYPE_Q8_1:
             return ctx->device->pipeline_quantize_q8_1;
         default:
-            std::cerr << "Missing quantize pipeline for type: " << ggml_type_name(type) << std::endl;
+            VK_ERR_DEBUG(   "Missing quantize pipeline for type: " << ggml_type_name(type) << std::endl);
             GGML_ABORT("fatal error");
     }
 }
@@ -6950,11 +6966,11 @@ static void ggml_vk_op_f32(ggml_backend_vk_context * ctx, vk_context& subctx, co
     vk_pipeline pipeline = ggml_vk_op_get_pipeline(ctx, src0, src1, src2, dst, op);
 
     if (pipeline == nullptr) {
-        std::cerr << "ggml_vulkan: Error: Missing op: " << ggml_op_name(op) << " for " << ggml_type_name(src0->type);
+        VK_ERR_DEBUG(   "ggml_vulkan: Error: Missing op: " << ggml_op_name(op) << " for " << ggml_type_name(src0->type));
         if (src1 != nullptr) {
-            std::cerr << " and " << ggml_type_name(src1->type);
+            VK_ERR_DEBUG(   " and " << ggml_type_name(src1->type));
         }
-        std::cerr << " to " << ggml_type_name(dst->type) << std::endl;
+        VK_ERR_DEBUG(   " to " << ggml_type_name(dst->type) << std::endl);
         GGML_ABORT("fatal error");
     }
 
@@ -9067,7 +9083,7 @@ static bool ggml_vk_build_graph(ggml_backend_vk_context * ctx, ggml_cgraph * cgr
     case GGML_OP_OPT_STEP_ADAMW:
         break;
     default:
-        std::cerr << "ggml_vulkan: Error: Missing op: " << ggml_op_name(node->op) << std::endl;
+        VK_ERR_DEBUG(   "ggml_vulkan: Error: Missing op: " << ggml_op_name(node->op) << std::endl);
         GGML_ABORT("fatal error");
         return false;
     }
@@ -9401,11 +9417,10 @@ static bool ggml_vk_build_graph(ggml_backend_vk_context * ctx, ggml_cgraph * cgr
         bool ok = ggml_vk_compute_forward(ctx, cgraph, node_begin, node_idx_begin, false, almost_ready);
         if (!ok) {
             if (node->op == GGML_OP_UNARY) {
-                std::cerr << __func__ << ": error: op not supported UNARY " << node->name << " (" << ggml_unary_op_name(static_cast<ggml_unary_op>(node->op_params[0])) << ")" << std::endl;
-            } else if (node->op == GGML_OP_GLU) {
-                std::cerr << __func__ << ": error: op not supported GLU " << node->name << " (" << ggml_glu_op_name(static_cast<ggml_glu_op>(node->op_params[0])) << ")" << std::endl;
-            } else {
-                std::cerr << __func__ << ": error: op not supported " << node->name << " (" << ggml_op_name(node->op) << ")" << std::endl;
+                VK_ERR_DEBUG(   __func__ << ": error: op not supported UNARY " << node->name << " (" << ggml_unary_op_name(static_cast<ggml_unary_op>(node->op_params[0])) << ")" << std::endl);
+            }
+            else {
+                VK_ERR_DEBUG(   __func__ << ": error: op not supported " << node->name << " (" << ggml_op_name(node->op) << ")" << std::endl);
             }
         }
 
@@ -10754,7 +10769,7 @@ static bool ggml_vk_instance_portability_enumeration_ext_available(const std::ve
         }
     }
     if (!portability_enumeration_ext) {
-        std::cerr << "ggml_vulkan: WARNING: Instance extension VK_KHR_portability_enumeration not found." << std::endl;
+        VK_ERR_DEBUG(   "ggml_vulkan: WARNING: Instance extension VK_KHR_portability_enumeration not found." << std::endl);
     }
 #endif
     return false;
@@ -10772,7 +10787,7 @@ static bool ggml_vk_instance_debug_utils_ext_available(
         }
     }
 
-    std::cerr << "ggml_vulkan: WARNING: Instance extension VK_EXT_debug_utils not found." << std::endl;
+    VK_ERR_DEBUG(   "ggml_vulkan: WARNING: Instance extension VK_EXT_debug_utils not found." << std::endl);
     return false;
 
     UNUSED(instance_extensions);
