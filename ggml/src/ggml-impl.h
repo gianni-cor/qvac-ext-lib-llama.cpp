@@ -12,6 +12,10 @@
 #include <stdint.h>
 #include <string.h>
 
+#ifdef __ANDROID__
+#include <android/log.h>
+#endif
+
 #ifdef __ARM_FEATURE_SVE
 #include <arm_sve.h>
 #endif // __ARM_FEATURE_SVE
@@ -81,6 +85,17 @@ GGML_ATTRIBUTE_FORMAT(2, 3)
 GGML_API void ggml_log_internal        (enum ggml_log_level level, const char * format, ...);
 GGML_API void ggml_log_callback_default(enum ggml_log_level level, const char * text, void * user_data);
 
+
+#ifdef __ANDROID__
+#define GGML_LOG(...)       __android_log_print(ANDROID_LOG_ERROR, "bare", __VA_ARGS__)
+#define GGML_LOG_INFO(...)  __android_log_print(ANDROID_LOG_ERROR, "bare", __VA_ARGS__)
+#define GGML_LOG_WARN(...)  __android_log_print(ANDROID_LOG_ERROR, "bare", __VA_ARGS__)
+#define GGML_LOG_ERROR(...) __android_log_print(ANDROID_LOG_ERROR, "bare", __VA_ARGS__)
+#define GGML_LOG_DEBUG(...) __android_log_print(ANDROID_LOG_ERROR, "bare", __VA_ARGS__)
+#define GGML_LOG_CONT(...)  __android_log_print(ANDROID_LOG_ERROR, "bare", __VA_ARGS__)
+
+#else
+
 #define GGML_LOG(...)       ggml_log_internal(GGML_LOG_LEVEL_NONE , __VA_ARGS__)
 #define GGML_LOG_INFO(...)  ggml_log_internal(GGML_LOG_LEVEL_INFO , __VA_ARGS__)
 #define GGML_LOG_WARN(...)  ggml_log_internal(GGML_LOG_LEVEL_WARN , __VA_ARGS__)
@@ -88,7 +103,9 @@ GGML_API void ggml_log_callback_default(enum ggml_log_level level, const char * 
 #define GGML_LOG_DEBUG(...) ggml_log_internal(GGML_LOG_LEVEL_DEBUG, __VA_ARGS__)
 #define GGML_LOG_CONT(...)  ggml_log_internal(GGML_LOG_LEVEL_CONT , __VA_ARGS__)
 
-#define GGML_DEBUG 0
+#endif
+
+#define GGML_DEBUG 10
 
 #if (GGML_DEBUG >= 1)
 #define GGML_PRINT_DEBUG(...) GGML_LOG_DEBUG(__VA_ARGS__)
