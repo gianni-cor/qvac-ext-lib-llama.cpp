@@ -105,7 +105,7 @@ GGML_API void ggml_log_callback_default(enum ggml_log_level level, const char * 
 
 #endif
 
-#define GGML_DEBUG 2
+#define GGML_DEBUG 0
 
 #if (GGML_DEBUG >= 1)
 #define GGML_PRINT_DEBUG(...) GGML_LOG_DEBUG(__VA_ARGS__)
