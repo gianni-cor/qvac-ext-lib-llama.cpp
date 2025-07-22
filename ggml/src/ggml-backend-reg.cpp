@@ -169,13 +169,14 @@ struct ggml_backend_registry {
         register_backend(ggml_backend_cuda_reg());
 #endif
 #ifdef GGML_USE_METAL
+        GGML_LOG_INFO(">>>>> sono in Metal a registrare\n");
         register_backend(ggml_backend_metal_reg());
 #endif
 #ifdef GGML_USE_SYCL
         register_backend(ggml_backend_sycl_reg());
 #endif
 #ifdef GGML_USE_VULKAN
-        GGML_LOG_INFO("sono in vulkan a registrare\n");
+        GGML_LOG_INFO(">>>>>> sono in vulkan a registrare\n");
         register_backend(ggml_backend_vk_reg());
 #endif
 #ifdef GGML_USE_WEBGPU
