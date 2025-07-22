@@ -175,6 +175,7 @@ struct ggml_backend_registry {
         register_backend(ggml_backend_sycl_reg());
 #endif
 #ifdef GGML_USE_VULKAN
+        GGML_LOG_INFO("sono in vulkan a registrare\n");
         register_backend(ggml_backend_vk_reg());
 #endif
 #ifdef GGML_USE_WEBGPU
