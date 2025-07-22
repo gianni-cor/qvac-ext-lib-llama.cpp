@@ -3195,6 +3195,7 @@ ggml_backend_reg_t ggml_backend_opencl_reg(void) {
     initialized = true;
 
     g_ggml_backend_opencl_devices = ggml_opencl_probe_devices(&reg);
+    GGML_LOG_INFO(">>>> SONO dentro GGML opencl\n");
 
     reg = ggml_backend_reg{
         /* .api_version = */ GGML_BACKEND_API_VERSION,
