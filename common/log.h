@@ -1,6 +1,10 @@
 #pragma once
 
 #include "ggml.h" // for ggml_log_level
+#ifdef __ANDROID__
+#include <android/log.h>
+#endif
+
 
 #define LOG_CLR_TO_EOL  "\033[K\r"
 #define LOG_COL_DEFAULT "\033[0m"
@@ -79,16 +83,46 @@ void common_log_set_timestamps(struct common_log * log,       bool   timestamps)
 //
 // this will avoid calling expensive_function() if LOG_DEFAULT_DEBUG > common_log_verbosity_thold
 //
-
+#ifdef __ANDROID__
 #define LOG_TMPL(level, verbosity, ...) \
     do { \
         if ((verbosity) <= common_log_verbosity_thold) { \
+            __android_log_print(level, "bare", __VA_ARGS__); \
+        } \
+    } while (0)
+#else
+#define LOG_TMPL(level, verbosity, ...) \
+    do { \
+      if ((verbosity) <= common_log_verbosity_thold) { \
             common_log_add(common_log_main(), (level), __VA_ARGS__); \
         } \
     } while (0)
+#endif
 
+
+
+
+#ifdef __ANDROID__
+
+#define LOG(...)             LOG_TMPL(ANDROID_LOG_INFO, 0,         __VA_ARGS__)
+#define LOGV(verbosity, ...) LOG_TMPL(ANDROID_LOG_INFO, 0, __VA_ARGS__)
+
+#define LOG_INF(...) LOG_TMPL(ANDROID_LOG_INFO,  0,                 __VA_ARGS__)
+#define LOG_WRN(...) LOG_TMPL(ANDROID_LOG_WARN,  0,                 __VA_ARGS__)
+#define LOG_ERR(...) LOG_TMPL(ANDROID_LOG_ERROR, 0,                 __VA_ARGS__)
+#define LOG_DBG(...) LOG_TMPL(ANDROID_LOG_DEBUG, 0,                  __VA_ARGS__)
+#define LOG_CNT(...) LOG_TMPL(ANDROID_LOG_INFO,  0,                 __VA_ARGS__)
+
+#define LOG_INFV(verbosity, ...) LOG_TMPL(ANDROID_LOG_INFO,  0, __VA_ARGS__)
+#define LOG_WRNV(verbosity, ...) LOG_TMPL(ANDROID_LOG_WARN,  0, __VA_ARGS__)
+#define LOG_ERRV(verbosity, ...) LOG_TMPL(ANDROID_LOG_ERROR, 0, __VA_ARGS__)
+#define LOG_DBGV(verbosity, ...) LOG_TMPL(ANDROID_LOG_DEBUG, 0, __VA_ARGS__)
+#define LOG_CNTV(verbosity, ...) LOG_TMPL(ANDROID_LOG_INFO,  0, __VA_ARGS__)
+
+#else
 #define LOG(...)             LOG_TMPL(GGML_LOG_LEVEL_NONE, 0,         __VA_ARGS__)
 #define LOGV(verbosity, ...) LOG_TMPL(GGML_LOG_LEVEL_NONE, verbosity, __VA_ARGS__)
+
 
 #define LOG_INF(...) LOG_TMPL(GGML_LOG_LEVEL_INFO,  0,                 __VA_ARGS__)
 #define LOG_WRN(...) LOG_TMPL(GGML_LOG_LEVEL_WARN,  0,                 __VA_ARGS__)
@@ -101,3 +135,5 @@ void common_log_set_timestamps(struct common_log * log,       bool   timestamps)
 #define LOG_ERRV(verbosity, ...) LOG_TMPL(GGML_LOG_LEVEL_ERROR, verbosity, __VA_ARGS__)
 #define LOG_DBGV(verbosity, ...) LOG_TMPL(GGML_LOG_LEVEL_DEBUG, verbosity, __VA_ARGS__)
 #define LOG_CNTV(verbosity, ...) LOG_TMPL(GGML_LOG_LEVEL_CONT,  verbosity, __VA_ARGS__)
+
+#endif
